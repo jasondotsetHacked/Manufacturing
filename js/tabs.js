@@ -117,50 +117,33 @@ function finishRenameTab(event, oldName) {
     revertRename(tabElement, oldName);
     return;
   }
-  if (!games[oldName] || (
-        games[oldName].resources.length === 0 &&
-        games[oldName].jobs.length === 0 &&
-        oldName !== activeTab
-     )) 
-  {
-    loadGameData(oldName, (loadedData) => {
-      games[oldName] = loadedData;
-      doRename(oldName, newName, tabElement, inputElement, editButton);
-    });
-  } else {
-    doRename(oldName, newName, tabElement, inputElement, editButton);
+  if (games[newName]) {
+    alert(`A tab named "${newName}" already exists. Please choose a different name.`);
+    revertRename(tabElement, oldName);
+    return;
   }
+  doRename(oldName, newName, tabElement, inputElement, editButton);
 }
 
 function doRename(oldName, newName, tabElement, inputElement, editButton) {
   const oldData = games[oldName] || { resources: [], jobs: [] };
+  games[newName] = oldData;
+  delete games[oldName];
   const transaction = db.transaction(['games'], 'readwrite');
   const store = transaction.objectStore('games');
-  const putRequest = store.put({ name: newName, ...oldData });
-  putRequest.onsuccess = () => {
-    const delRequest = store.delete(oldName);
-    delRequest.onsuccess = () => {
-      games[newName] = oldData;
-      delete games[oldName];
-      tabElement.dataset.tab = newName;
-      const spanElement = document.createElement('span');
-      spanElement.textContent = newName;
-      inputElement.replaceWith(spanElement);
-      editButton.textContent = '✎';
-      if (activeTab === oldName) {
-        activeTab = newName;
-      }
-      saveTabs(Object.keys(games));
-      updateResourceList();
-      updateJobList();
-    };
-    delRequest.onerror = (err) => {
-      console.error('Failed to delete old tab name from DB:', err);
-    };
-  };
-  putRequest.onerror = (err) => {
-    console.error('Failed to put new tab name into DB:', err);
-  };
+  store.put({ name: newName, resources: oldData.resources || [], jobs: oldData.jobs || [] });
+  store.delete(oldName);
+  tabElement.dataset.tab = newName;
+  const spanElement = document.createElement('span');
+  spanElement.textContent = newName;
+  inputElement.replaceWith(spanElement);
+  editButton.textContent = '✎';
+  if (activeTab === oldName) {
+    activeTab = newName;
+  }
+  saveTabs(Object.keys(games));
+  updateResourceList();
+  updateJobList();
 }
 
 function revertRename(tabElement, oldName) {
