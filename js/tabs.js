@@ -72,11 +72,11 @@ function saveTabName(event, oldName) {
     const inputElement = tabElement.querySelector('.tab-input');
     const newName = inputElement.value.trim();
 
-    if (newName) {
+    if (newName && newName !== oldName) {
         const transaction = db.transaction(['games'], 'readwrite');
         const store = transaction.objectStore('games');
         store.delete(oldName);
-        store.add({ name: newName, ...games[oldName] });
+        store.put({ name: newName, ...games[oldName] });
         delete games[oldName];
         games[newName] = { resources: [], jobs: [] };
         tabElement.dataset.tab = newName;
