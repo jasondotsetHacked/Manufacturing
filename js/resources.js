@@ -15,11 +15,8 @@ export function initResources() {
 function addResource() {
   const resourceName = document.getElementById('resource-name').value.trim();
   const isProduct = document.getElementById('resource-type').checked;
-
-  if (!resourceName) return; // ignore empty
-
+  if (!resourceName) return;
   if (isProduct) {
-    // A "Product" can have inputs
     const inputs = [];
     document.querySelectorAll('#resource-input-container .input-group').forEach((group) => {
       const inputResource = group.querySelector('.resource-input').value;
@@ -32,14 +29,12 @@ function addResource() {
       inputs
     });
   } else {
-    // A "Resource" doesn't have inputs
     games[activeTab].resources.push({
       name: resourceName,
       type: 'Resource',
       inputs: []
     });
   }
-
   saveGameData(activeTab, games[activeTab]);
   updateResourceList();
   document.getElementById('resource-name').value = '';
@@ -62,7 +57,6 @@ function toggleResourceInputs() {
   const resourceNameLabel = document.querySelector('label[for="resource-name"]');
   const resourceNameInput = document.getElementById('resource-name');
   const addResourceButton = document.getElementById('add-resource-btn');
-
   if (isProduct) {
     inputContainer.style.display = 'block';
     resourceNameLabel.textContent = 'Product Name';
@@ -80,9 +74,7 @@ function toggleResourceInputs() {
 function updateInputOptions() {
   const inputSelects = document.querySelectorAll('.resource-input');
   inputSelects.forEach((select) => {
-    // Clear existing options
     select.innerHTML = '';
-    // Re-populate with the existing resource names
     games[activeTab].resources.forEach((res) => {
       const option = document.createElement('option');
       option.value = res.name;

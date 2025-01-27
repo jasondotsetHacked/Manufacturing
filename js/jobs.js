@@ -8,7 +8,6 @@ export function initJobs() {
 function addJob() {
   const jobName = document.getElementById('job-name').value.trim();
   if (!jobName) return;
-
   games[activeTab].jobs.push({ name: jobName });
   saveGameData(activeTab, games[activeTab]);
   updateJobList();
