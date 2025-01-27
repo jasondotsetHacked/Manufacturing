@@ -1,66 +1,99 @@
+/********************************************
+ * File: js/tabs.js (Updated to preserve data on rename)
+ ********************************************/
 import { db, saveTabs, loadTabs, saveGameData, loadGameData } from './db.js';
 import { updateResourceList } from './resources.js';
 import { updateJobList } from './jobs.js';
 
-export let activeTab = 'default';
-// Holds in-memory data for each tab
-export const games = {
-  default: {
-    resources: [],
-    jobs: []
-  }
-};
+// Tracks the currently active tab name
+export let activeTab = null;
 
+// Holds in-memory data for each tab, keyed by tab name
+export const games = {};
+
+/**
+ * Initializes tab logic, loads saved tab names from DB,
+ * creates a default tab if needed, etc.
+ */
 export function initTabs() {
-  // Set up the main event listeners
-  document.querySelector('.add-tab').addEventListener('click', addTab);
-  document.querySelector('.tabs').addEventListener('click', (event) => {
-    if (event.target.classList.contains('edit-tab')) {
-      // Rename action
-      renameTab(event, event.target.closest('.tab').dataset.tab);
-      event.stopPropagation();
-    } else if (event.target.closest('.tab')) {
-      // Switch tab action
-      switchTab(event);
+  // 1) Load the stored list of tabs (if any)
+  loadTabs((tabs) => {
+    // If no tabs exist, create a "default" tab in memory and DB
+    if (tabs.length === 0) {
+      const defaultName = 'default';
+      games[defaultName] = { resources: [], jobs: [] };
+      saveGameData(defaultName, games[defaultName]);     // Save to DB
+      saveTabs([defaultName]);                           // Store "default" as the only tab
+
+      // Create the DOM element for "default"
+      createTabElement(defaultName);
+      activateTab(defaultName);
+
+      // Since we just created an empty default tab, no data to load
+      updateResourceList();
+      updateJobList();
+    } else {
+      // 2) We have existing tabs, so create DOM elements for each
+      tabs.forEach((tabName) => {
+        createTabElement(tabName);
+        // Prepare in-memory entry; actual data will be loaded on switch
+        games[tabName] = { resources: [], jobs: [] };
+      });
+
+      // 3) Activate the first tab in the list, load its data
+      const firstTab = tabs[0];
+      activateTab(firstTab);
+
+      loadGameData(firstTab, (data) => {
+        games[firstTab] = data;
+        updateResourceList();
+        updateJobList();
+      });
     }
   });
 
-  // Load any stored tabs from IndexedDB
-  loadTabs((tabs) => {
-    // Create a tab button for each stored tab name
-    tabs.forEach((tabName) => {
-      // Skip "default" if it’s already in memory
-      if (tabName !== 'default') {
-        createTabElement(tabName);
-        if (!games[tabName]) {
-          games[tabName] = { resources: [], jobs: [] };
-        }
+  // Set up event listeners for adding tabs, renaming tabs, or switching tabs
+  document.querySelector('.add-tab').addEventListener('click', addTab);
+
+  document.querySelector('.tabs').addEventListener('click', (event) => {
+    // If user clicked the "edit-tab" (pencil or save icon)
+    if (event.target.classList.contains('edit-tab')) {
+      // Stop the click from also triggering "switchTab"
+      event.stopPropagation();
+      const tabDiv = event.target.closest('.tab');
+      const oldName = tabDiv.dataset.tab;
+
+      if (event.target.textContent === '✎') {
+        // Pencil icon => start rename
+        renameTab(event, oldName);
+      } else {
+        // Save icon => finish renaming
+        saveTabName(event, oldName);
       }
-    });
-    // Load data for the default tab
-    loadGameData('default', (data) => {
-      games['default'] = data;
-      updateResourceList();
-      updateJobList();
-    });
+    }
+    // If user clicked the tab span area, switch tab
+    else if (event.target.closest('.tab')) {
+      switchTab(event);
+    }
   });
 }
 
 /**
- * Add a brand-new tab.
+ * Create a new tab both in memory and in the DB.
  */
 function addTab() {
   const newTabName = `Tab ${Date.now()}`; // Unique name based on timestamp
-  // Create the visual tab element
-  createTabElement(newTabName);
-
-  // Initialize empty data in memory for this tab
+  // Initialize empty data in memory
   games[newTabName] = { resources: [], jobs: [] };
-
-  // Save it to IndexedDB
+  // Save to IndexedDB
   saveGameData(newTabName, games[newTabName]);
-  // Update 'tabs' list in IndexedDB
-  saveTabs(Object.keys(games));
+
+  // Update the 'tabs' list in IndexedDB
+  const allTabNames = Object.keys(games);
+  saveTabs(allTabNames);
+
+  // Create the tab element in the DOM
+  createTabElement(newTabName);
 
   // Automatically switch to the new tab
   activateTab(newTabName);
@@ -69,18 +102,20 @@ function addTab() {
 }
 
 /**
- * Creates the actual <div class="tab"> element in the .tabs container.
+ * Creates the actual <div class="tab"> element for a given tab name
+ * and inserts it before the "+ (add-tab)" button.
  */
 function createTabElement(tabName) {
   const newTab = document.createElement('div');
   newTab.className = 'tab';
   newTab.dataset.tab = tabName;
   newTab.innerHTML = `<span>${tabName}</span><button class='edit-tab'>✎</button>`;
-  document.querySelector('.tabs').insertBefore(newTab, document.querySelector('.add-tab'));
+  const addTabBtn = document.querySelector('.add-tab');
+  document.querySelector('.tabs').insertBefore(newTab, addTabBtn);
 }
 
 /**
- * Switches the active tab based on user click.
+ * Switches the active tab based on user click in the DOM.
  */
 function switchTab(event) {
   const clickedTab = event.target.closest('.tab');
@@ -93,7 +128,7 @@ function switchTab(event) {
   clickedTab.classList.add('active');
   activeTab = clickedTab.dataset.tab;
 
-  // Load the data from IndexedDB for that tab
+  // Load the data for that tab from IndexedDB
   loadGameData(activeTab, (data) => {
     games[activeTab] = data;
     updateResourceList();
@@ -102,7 +137,7 @@ function switchTab(event) {
 }
 
 /**
- * Helper to programmatically set a tab as active (used after creation).
+ * Programmatically mark a tab as active by name.
  */
 function activateTab(tabName) {
   document.querySelectorAll('.tab').forEach((t) => {
@@ -116,81 +151,103 @@ function activateTab(tabName) {
 }
 
 /**
- * Begins renaming a tab by swapping its <span> to an <input>.
+ * Start the renaming process by replacing the <span> with an <input>,
+ * and switching the edit button to a save icon.
  */
 function renameTab(event, oldName) {
+  event.stopPropagation();
+
   const tabElement = event.target.closest('.tab');
   const spanElement = tabElement.querySelector('span');
   const editButton = event.target;
 
-  // Replace text span with an input for editing
+  // Create an input with the old name
   const inputElement = document.createElement('input');
   inputElement.type = 'text';
   inputElement.value = oldName;
   inputElement.className = 'tab-input';
 
+  // Replace the span with this input
   spanElement.replaceWith(inputElement);
-  editButton.textContent = '💾'; // Save icon
 
-  // Temporarily override the button's click to "save" instead of "rename"
-  editButton.onclick = (e) => {
-    saveTabName(e, oldName);
-  };
+  // Change button icon to a "save" icon
+  editButton.textContent = '💾';
+
+  // Focus the input for convenience
+  inputElement.focus();
 }
 
 /**
- * Final step of renaming (saving the new tab name to DB).
+ * Finish the renaming process. We do:
+ * 1) Put (save) old data under new name in IndexedDB,
+ * 2) Delete the old name record,
+ * 3) Update memory & UI, so the data is not lost.
  */
 function saveTabName(event, oldName) {
+  event.stopPropagation();
+
   const tabElement = event.target.closest('.tab');
   const inputElement = tabElement.querySelector('.tab-input');
   const editButton = event.target;
   const newName = inputElement.value.trim();
 
+  // If empty or unchanged, just revert
   if (!newName || newName === oldName) {
-    // Either the name didn't change, or is empty => revert
     revertRename(tabElement, oldName);
     return;
   }
 
-  // Merge old data to the new tab name
+  // Get the old data from memory (so we don't lose it)
   const oldData = games[oldName] || { resources: [], jobs: [] };
 
-  // Remove old record from DB, store under new name
+  // Open a transaction on "games" store
   const transaction = db.transaction(['games'], 'readwrite');
   const store = transaction.objectStore('games');
-  store.delete(oldName);
-  store.put({ name: newName, ...oldData });
 
-  // Update in-memory references
-  games[newName] = oldData;
-  delete games[oldName];
+  // First, put (write) the same data under the new name
+  const putRequest = store.put({ name: newName, ...oldData });
+  putRequest.onsuccess = () => {
+    // Next, delete the old record
+    const delRequest = store.delete(oldName);
+    delRequest.onsuccess = () => {
+      // Once the delete is successful, update in-memory references
+      games[newName] = oldData;
+      delete games[oldName];
 
-  // Update tab's dataset
-  tabElement.dataset.tab = newName;
+      // Update tab's dataset
+      tabElement.dataset.tab = newName;
 
-  // Revert the input back to a <span> with the new name
-  const spanElement = document.createElement('span');
-  spanElement.textContent = newName;
-  inputElement.replaceWith(spanElement);
+      // Swap input back to a span
+      const spanElement = document.createElement('span');
+      spanElement.textContent = newName;
+      inputElement.replaceWith(spanElement);
 
-  // Restore the button to an edit button
-  editButton.textContent = '✎';
-  editButton.onclick = (e) => renameTab(e, newName);
+      // Restore the button to pencil icon
+      editButton.textContent = '✎';
 
-  // Update "activeTab"
-  activeTab = newName;
+      // Update our activeTab to the new name
+      activeTab = newName;
 
-  // Persist new "tabs" list to DB
-  saveTabs(Object.keys(games));
+      // Persist updated tab list
+      saveTabs(Object.keys(games));
 
-  // Refresh resource/job lists with the new name
-  updateResourceList();
-  updateJobList();
+      // Finally, refresh the UI with the data under the new name
+      updateResourceList();
+      updateJobList();
+    };
+
+    delRequest.onerror = (err) => {
+      console.error('Failed to delete old tab name from DB:', err);
+    };
+  };
+
+  putRequest.onerror = (err) => {
+    console.error('Failed to put new tab name into DB:', err);
+  };
 }
 
 /**
- * If the user cancels or if the new name is invalid, just revert to the old name.
+ * Revert rename if user cancels or leaves name blank/unchanged.
  */
 function revertRename(tabElement, oldName) {
   const inputElement = tabElement.querySelector('.tab-input');
@@ -200,7 +257,6 @@ function revertRename(tabElement, oldName) {
   spanElement.textContent = oldName;
   inputElement.replaceWith(spanElement);
 
-  // Restore the button to an edit button
+  // Restore the button to a pencil icon
   editButton.textContent = '✎';
-  editButton.onclick = (e) => renameTab(e, oldName);
 }
