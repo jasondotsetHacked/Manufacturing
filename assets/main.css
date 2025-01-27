@@ -217,30 +217,25 @@ button {
     font-size: 1rem;
 }
 
-#add-input,
-#add-job-input {
+#add-input {
     background-color: #28a745;
     color: white;
     margin-top: 1rem;
 }
-#add-input:hover,
-#add-job-input:hover {
+#add-input:hover {
     background-color: #218838;
 }
 
-#add-resource-btn,
-#add-job-btn {
+#add-resource-btn {
     background-color: #007bff;
     color: white;
     margin-top: 1rem;
 }
-#add-resource-btn:hover,
-#add-job-btn:hover {
+#add-resource-btn:hover {
     background-color: #0056b3;
 }
 
 .resource-list,
-.job-list,
 .shopping-list {
     list-style: none;
     padding: 0;
@@ -248,7 +243,6 @@ button {
 }
 
 .resource-item,
-.job-item,
 .shopping-item {
     padding: 0.75rem;
     border: 1px solid #ddd;
@@ -259,11 +253,6 @@ button {
 }
 
 .resource-name-span {
-    cursor: pointer;
-    margin-right: 10px;
-}
-
-.job-item span.job-name-span {
     cursor: pointer;
     margin-right: 10px;
 }

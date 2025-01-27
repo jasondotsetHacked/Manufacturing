@@ -1,40 +1,25 @@
 import { activeTab, games } from './tabs.js';
 import { saveGameData } from './db.js';
-import { updateJobProductDropdown } from './jobs.js';
 
 export function initResources() {
-  document
-    .getElementById('add-resource-btn')
-    .addEventListener('click', addResource);
-
-  document
-    .getElementById('resource-type')
-    .addEventListener('change', toggleResourceInputs);
-
+  document.getElementById('add-resource-btn').addEventListener('click', addResource);
+  document.getElementById('resource-type').addEventListener('change', toggleResourceInputs);
   document.getElementById('add-input').addEventListener('click', addInput);
-
-  document
-    .getElementById('resource-input-container')
-    .addEventListener('click', (event) => {
-      if (event.target.classList.contains('remove-input')) {
-        event.target.parentElement.remove();
-      }
-    });
-
-  document
-    .querySelector('.resource-list')
-    .addEventListener('click', handleResourceListClick);
+  document.getElementById('resource-input-container').addEventListener('click', (event) => {
+    if (event.target.classList.contains('remove-input')) {
+      event.target.parentElement.remove();
+    }
+  });
+  document.querySelector('.resource-list').addEventListener('click', handleResourceListClick);
 }
 
 function addResource() {
   if (!games[activeTab]) {
-    games[activeTab] = { resources: [], jobs: [] };
+    games[activeTab] = { resources: [] };
   }
-  
   const resourceName = document.getElementById('resource-name').value.trim();
   const isProduct = document.getElementById('resource-type').checked;
   if (!resourceName) return;
-
   if (isProduct) {
     const inputs = [];
     document.querySelectorAll('#resource-input-container .input-group').forEach((group) => {
@@ -42,29 +27,21 @@ function addResource() {
       const quantity = parseInt(group.querySelector('.resource-quantity').value) || 1;
       inputs.push({ input: inputResource, quantity });
     });
-    games[activeTab].resources.push({
-      name: resourceName,
-      type: 'Product',
-      inputs,
-    });
+    games[activeTab].resources.push({ name: resourceName, type: 'Product', inputs });
   } else {
-    games[activeTab].resources.push({
-      name: resourceName,
-      type: 'Resource',
-      inputs: [],
-    });
+    games[activeTab].resources.push({ name: resourceName, type: 'Resource', inputs: [] });
   }
-
   saveGameData(activeTab, games[activeTab]);
   updateResourceList();
-  updateJobProductDropdown();
   document.getElementById('resource-name').value = '';
 }
 
 export function updateResourceList() {
   const resourceList = document.querySelector('.resource-list');
   resourceList.innerHTML = '';
-
+  if (!activeTab || !games[activeTab] || !games[activeTab].resources) {
+    return;
+  }
   games[activeTab].resources.forEach((res) => {
     const li = document.createElement('li');
     li.className = 'resource-item';
@@ -91,7 +68,6 @@ function toggleResourceInputs() {
   const resourceNameLabel = document.querySelector('label[for="resource-name"]');
   const resourceNameInput = document.getElementById('resource-name');
   const addResourceButton = document.getElementById('add-resource-btn');
-
   if (isProduct) {
     inputContainer.style.display = 'block';
     resourceNameLabel.textContent = 'Product Name';
@@ -135,11 +111,9 @@ function addInput() {
 function handleResourceListClick(event) {
   const li = event.target.closest('.resource-item');
   if (!li) return;
-
   const resName = li.dataset.resName;
   const resourceObj = games[activeTab].resources.find((r) => r.name === resName);
   if (!resourceObj) return;
-
   if (event.target.classList.contains('edit-resource')) {
     editResource(resourceObj);
   } else if (event.target.classList.contains('remove-resource')) {
@@ -147,9 +121,7 @@ function handleResourceListClick(event) {
   } else if (event.target.classList.contains('resource-name-span')) {
     if (resourceObj.type === 'Product') {
       const productTotals = calculateResourceTotals(resourceObj);
-      const shoppingItems = Object.entries(productTotals).map(
-        ([name, qty]) => `${name}: ${qty}`
-      );
+      const shoppingItems = Object.entries(productTotals).map(([name, qty]) => `${name}: ${qty}`);
       updateShoppingList(shoppingItems);
     } else {
       updateShoppingList([`${resourceObj.name} is a raw resource (no inputs).`]);
@@ -161,20 +133,16 @@ function editResource(resourceObj) {
   const idx = games[activeTab].resources.findIndex((r) => r.name === resourceObj.name);
   if (idx === -1) return;
   games[activeTab].resources.splice(idx, 1);
-
   document.getElementById('resource-name').value = resourceObj.name;
   const isProduct = resourceObj.type === 'Product';
   document.getElementById('resource-type').checked = isProduct;
-
   toggleResourceInputs();
-
   if (isProduct && resourceObj.inputs) {
     const container = document.getElementById('resource-input-container');
     const groups = container.querySelectorAll('.input-group');
     groups.forEach((g, i) => {
       if (i > 0) g.remove();
     });
-
     if (resourceObj.inputs.length > 0) {
       const firstGroup = container.querySelector('.input-group');
       resourceObj.inputs.forEach((inp, index) => {
@@ -191,10 +159,8 @@ function editResource(resourceObj) {
       });
     }
   }
-
   saveGameData(activeTab, games[activeTab]);
   updateResourceList();
-  updateJobProductDropdown();
 }
 
 function removeResource(resourceObj) {
@@ -203,7 +169,6 @@ function removeResource(resourceObj) {
   games[activeTab].resources.splice(idx, 1);
   saveGameData(activeTab, games[activeTab]);
   updateResourceList();
-  updateJobProductDropdown();
   updateShoppingList([]);
 }
 

@@ -1,6 +1,5 @@
 import { db, saveTabs, loadTabs, saveGameData, loadGameData } from './db.js';
 import { updateResourceList } from './resources.js';
-import { updateJobList } from './jobs.js';
 
 export let activeTab = null;
 export const games = {};
@@ -9,24 +8,22 @@ export function initTabs() {
   loadTabs((tabs) => {
     if (tabs.length === 0) {
       const defaultName = 'default';
-      games[defaultName] = { resources: [], jobs: [] };
+      games[defaultName] = { resources: [] };
       saveGameData(defaultName, games[defaultName]);
       saveTabs([defaultName]);
       createTabElement(defaultName);
       activateTab(defaultName);
       updateResourceList();
-      updateJobList();
     } else {
       tabs.forEach((tabName) => {
         createTabElement(tabName);
-        games[tabName] = { resources: [], jobs: [] };
+        games[tabName] = { resources: [] };
       });
       const firstTab = tabs[0];
       activateTab(firstTab);
       loadGameData(firstTab, (data) => {
         games[firstTab] = data;
         updateResourceList();
-        updateJobList();
       });
     }
   });
@@ -51,14 +48,13 @@ export function initTabs() {
 
 function addTab() {
   const newTabName = `Tab ${Date.now()}`;
-  games[newTabName] = { resources: [], jobs: [] };
+  games[newTabName] = { resources: [] };
   saveGameData(newTabName, games[newTabName]);
   const allTabNames = Object.keys(games);
   saveTabs(allTabNames);
   createTabElement(newTabName);
   activateTab(newTabName);
   updateResourceList();
-  updateJobList();
 }
 
 function createTabElement(tabName) {
@@ -79,7 +75,6 @@ function switchTab(event) {
   loadGameData(activeTab, (data) => {
     games[activeTab] = data;
     updateResourceList();
-    updateJobList();
   });
 }
 
@@ -127,13 +122,13 @@ function finishRenameTab(event, oldName) {
 }
 
 function doRename(oldName, newName, tabElement, inputElement, editButton) {
-  const oldData = games[oldName] || { resources: [], jobs: [] };
+  const oldData = games[oldName] || { resources: [] };
   games[newName] = oldData;
   delete games[oldName];
 
   const transaction = db.transaction(['games'], 'readwrite');
   const store = transaction.objectStore('games');
-  store.put({ name: newName, resources: oldData.resources || [], jobs: oldData.jobs || [] });
+  store.put({ name: newName, resources: oldData.resources || [] });
   store.delete(oldName);
 
   tabElement.dataset.tab = newName;
@@ -147,7 +142,6 @@ function doRename(oldName, newName, tabElement, inputElement, editButton) {
   }
   saveTabs(Object.keys(games));
   updateResourceList();
-  updateJobList();
 }
 
 function revertRename(tabElement, oldName) {
