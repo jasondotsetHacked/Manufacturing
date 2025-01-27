@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Game Manufacturing Manager</title>
   <link rel="stylesheet" href="assets/main.css" />
 </head>
-
 <body>
   <div class="tabs">
-    <!-- Removed the hard-coded 'Default' tab. Now we only have this 'add-tab' button. -->
     <button class="add-tab">+</button>
   </div>
 
@@ -33,7 +31,12 @@
         <label>Inputs</label>
         <div class="input-group">
           <select class="resource-input"></select>
-          <input type="number" class="resource-quantity" min="1" placeholder="Quantity" />
+          <input
+            type="number"
+            class="resource-quantity"
+            min="1"
+            placeholder="Quantity"
+          />
           <button type="button" class="remove-input">Remove</button>
         </div>
         <button type="button" id="add-input">Add Input</button>
@@ -42,11 +45,27 @@
     </div>
 
     <div class="section" id="job-section">
-      <h2>Define Production/Jobs</h2>
+      <h2>Jobs</h2>
       <div class="form-group">
         <label for="job-name">Job Name</label>
         <input type="text" id="job-name" placeholder="e.g., T2 Manufacturing" />
       </div>
+
+      <div class="form-group" id="job-input-container">
+        <label>Products to Build</label>
+        <div class="input-group">
+          <select class="job-product-input"></select>
+          <input
+            type="number"
+            class="job-product-quantity"
+            min="1"
+            placeholder="Quantity"
+          />
+          <button type="button" class="remove-job-input">Remove</button>
+        </div>
+        <button type="button" id="add-job-input">Add Product</button>
+      </div>
+
       <button id="add-job-btn">Add Job</button>
       <ul class="job-list"></ul>
     </div>

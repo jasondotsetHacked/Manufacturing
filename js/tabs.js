@@ -32,6 +32,7 @@ export function initTabs() {
   });
 
   document.querySelector('.add-tab').addEventListener('click', addTab);
+
   document.querySelector('.tabs').addEventListener('click', (event) => {
     if (event.target.classList.contains('edit-tab')) {
       event.stopPropagation();
@@ -129,15 +130,18 @@ function doRename(oldName, newName, tabElement, inputElement, editButton) {
   const oldData = games[oldName] || { resources: [], jobs: [] };
   games[newName] = oldData;
   delete games[oldName];
+
   const transaction = db.transaction(['games'], 'readwrite');
   const store = transaction.objectStore('games');
   store.put({ name: newName, resources: oldData.resources || [], jobs: oldData.jobs || [] });
   store.delete(oldName);
+
   tabElement.dataset.tab = newName;
   const spanElement = document.createElement('span');
   spanElement.textContent = newName;
   inputElement.replaceWith(spanElement);
   editButton.textContent = '✎';
+
   if (activeTab === oldName) {
     activeTab = newName;
   }

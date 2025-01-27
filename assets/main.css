@@ -21,7 +21,7 @@ body {
 
 .tab {
     margin-right: 1rem;
-    padding: 0.5rem 1rem;
+    padding: 0rem 1rem;
     background-color: #444;
     border: none;
     cursor: pointer;
@@ -185,6 +185,9 @@ input:checked + .slider:before {
 .input-group button {
     background-color: #dc3545;
     color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem;
 }
 
 .input-group button:hover {
@@ -214,26 +217,26 @@ button {
     font-size: 1rem;
 }
 
-button[onclick="addResource()"],
-button[onclick="addJob()"] {
-    background-color: #007bff;
-    color: white;
-    margin-top: 1rem;
-}
-
-button[onclick="addResource()"]:hover,
-button[onclick="addJob()"]:hover {
-    background-color: #0056b3;
-}
-
-#add-input {
+#add-input,
+#add-job-input {
     background-color: #28a745;
     color: white;
     margin-top: 1rem;
 }
-
-#add-input:hover {
+#add-input:hover,
+#add-job-input:hover {
     background-color: #218838;
+}
+
+#add-resource-btn,
+#add-job-btn {
+    background-color: #007bff;
+    color: white;
+    margin-top: 1rem;
+}
+#add-resource-btn:hover,
+#add-job-btn:hover {
+    background-color: #0056b3;
 }
 
 .resource-list,
@@ -253,4 +256,14 @@ button[onclick="addJob()"]:hover {
     border-radius: 5px;
     background-color: #fff;
     font-size: 1rem;
+}
+
+.resource-name-span {
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.job-item span.job-name-span {
+    cursor: pointer;
+    margin-right: 10px;
 }

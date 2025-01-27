@@ -13,7 +13,7 @@ export function initDB() {
 
     dbRequest.onsuccess = (event) => {
       db = event.target.result;
-      resolve(); // Resolves once DB is ready
+      resolve();
     };
 
     dbRequest.onerror = (event) => {
@@ -35,7 +35,6 @@ export function loadGameData(tabName, callback) {
   const request = store.get(tabName);
 
   request.onsuccess = () => {
-    // Return an object with empty arrays if no existing data
     const data = request.result || { resources: [], jobs: [] };
     callback(data);
   };
