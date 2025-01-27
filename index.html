@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Manufacturing Manager</title>
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="assets/main.css">
 </head>
 
 <body>
     <div class="tabs">
         <div class="tab active" data-tab="default">
             <span>Default</span>
-            <button class="edit-tab" onclick="renameTab(event, 'default')">✎</button>
+            <button class="edit-tab">✎</button>
         </div>
         <button class="add-tab">+</button>
     </div>
@@ -23,7 +23,7 @@
             <div class="form-group toggle-group">
                 <label>Resource</label>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="resource-type" onchange="toggleResourceInputs()">
+                    <input type="checkbox" id="resource-type">
                     <span class="slider"></span>
                 </label>
                 <label>Product</label>
@@ -31,7 +31,7 @@
             <div class="form-group">
                 <label for="resource-name">Resource Name</label>
                 <input type="text" id="resource-name" placeholder="e.g., T1 Resource">
-                <button onclick="addResource()">Add Resource</button>
+                <button id="add-resource-btn">Add Resource</button>
             </div>
             <div class="form-group" id="resource-input-container" style="display: none;">
                 <label>Inputs</label>
@@ -51,7 +51,7 @@
                 <label for="job-name">Job Name</label>
                 <input type="text" id="job-name" placeholder="e.g., T2 Manufacturing">
             </div>
-            <button onclick="addJob()">Add Job</button>
+            <button id="add-job-btn">Add Job</button>
             <ul class="job-list"></ul>
         </div>
 
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <script src="main.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 
 </html>
